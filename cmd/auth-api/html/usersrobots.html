@@ -1,0 +1,210 @@
+<head>
+    <title>Robots</title>
+</head>
+<body>
+        <table id = "robotsTable">
+            <tr>
+                <th>robot_id</th>
+                <th>owner_user_id</th>
+                <th>parent_robot_id</th>
+                <th>is_favorite</th>
+                <th>is_active</th>
+                <th>ticker</th>
+                <th>buy_price</th>
+                <th>sell_price</th>
+                <th>plan_start</th>
+                <th>plan_end</th>
+                <th>plan_yield</th>
+                <th>fact_yield</th>
+                <th>deals_counts</th>
+                <th>activated_at</th>
+                <th>deactivated_at</th>
+                <th>created_at</th>
+                <th>deleted_at</th>
+            </tr>
+                {{range $value := .Robots}}
+                    <tr id = {{$value.RobotID}}>
+                        <td>{{$value.RobotID}}</td>
+                        <td>{{$value.OwnerUserID}}</td>
+                        <td>{{$value.ParentRobotID}}</td>
+                        <td>{{$value.IsFavourite}}</td>
+                        <td>{{$value.IsActive}}</td>
+                        {{if .Ticker}}<td>{{.Ticker}}</td>{{else}}<td>Empty</td>{{end}}
+                        <td>{{$value.BuyPrice}}</td>
+                        <td>{{$value.SellPrice}}</td>
+                        {{if .PlanStart}}<td>{{.PlanStart}}</td>{{else}}<td>Empty</td>{{end}}
+                        {{if .PlanEnd}}<td>{{.PlanEnd}}</td>{{else}}<td>Empty</td>{{end}}
+                        <td>{{$value.PlanYield}}</td>
+                        <td>{{$value.FactYield}}</td>
+                        <td>{{$value.DealsCount}}</td>
+                        {{if .ActivatedAt}}<td>{{.ActivatedAt}}</td>{{else}}<td>Empty</td>{{end}}
+                        {{if .DeactivatedAt}}<td>{{.DeactivatedAt}}</td>{{else}}<td>Empty</td>{{end}}
+                        <td>{{$value.CreatedAt}} </td>
+                        {{if .DeletedAt}}<td>{{.DeletedAt}}</td>{{else}}<td>Empty</td>{{end}}
+                        <td><button onclick = "activate({{$value.RobotID}})">Activate</button></td>
+                        <td><button onclick = "deactivate({{$value.RobotID}})">Deactivate</button></td>
+                    </tr>
+                {{end}}
+        </table> 
+        <h1 id = "error"></h1>
+
+        <script> 
+            var socket = new WebSocket('ws://localhost:5000/wsrobots');
+        
+            socket.onopen = function(event) {
+                console.log('WebSocket is connected.');
+            };
+
+            socket.onmessage = function(event) {
+                var message = event.data;
+                object = JSON.parse(message)
+                
+                ownerID = {{.OwnerID}}
+                
+                if(object.owner_user_id == ownerID) {
+                        updateRobot(object)
+                }
+            }
+
+            socket.onclose = function(event) {
+                console.log('Disconnected from WebSocket.');
+            };
+
+            function activate(id) {
+                var xhr = new XMLHttpRequest();
+
+                xhr.open('PUT', 'http://localhost:5000/robot/'+id+'/activate')
+                xhr.setRequestHeader('Authorization', "{{.Token}}");
+                xhr.responseType = 'json'
+                xhr.send()
+
+                xhr.onload = function() {
+                    if(xhr.status != 200) {
+                        document.getElementById("error").innerHTML = xhr.response.error
+                    }
+                };
+            };
+
+            function deactivate(id) {
+                var xhr = new XMLHttpRequest();
+
+                xhr.open('PUT', 'http://localhost:5000/robot/'+id+'/deactivate')
+                xhr.setRequestHeader('Authorization', "{{.Token}}");
+                xhr.responseType = 'json'
+                xhr.send()
+
+                xhr.onload = function() {
+                    if(xhr.status != 200) {
+                        document.getElementById("error").innerHTML = xhr.response.error
+                    }
+                };
+            };
+
+
+            function updateRobot(object) {
+                var table = document.getElementById("robotsTable"), indeX, changed = false;
+                for(var i = 1; i < table.rows.length; i++) {
+                    if(table.rows[i].cells[0].innerHTML == object.robot_id) {
+                        indeX = i
+                        changed = true
+                    }
+                }
+                
+                if (changed) {
+                    table.rows[indeX].cells[1].innerHTML = object.owner_user_id
+                    table.rows[indeX].cells[2].innerHTML = object.parent_robot_id
+                    table.rows[indeX].cells[3].innerHTML = object.is_favorite
+                    table.rows[indeX].cells[4].innerHTML = object.is_active
+                    if (object.ticker != undefined || object.ticker != null) {
+                        table.rows[indeX].cells[5].innerHTML = object.ticker
+                    } else {
+                        table.rows[indeX].cells[5].innerHTML = "Empty"
+                    }
+                    table.rows[indeX].cells[6].innerHTML = object.buy_price
+                    table.rows[indeX].cells[7].innerHTML = object.sell_price
+                    table.rows[indeX].cells[8].innerHTML = object.plan_start
+                    if (object.plan_start != undefined || object.plan_start != null) {
+                        table.rows[indeX].cells[8].innerHTML = object.plan_start
+                    } else {
+                        table.rows[indeX].cells[8].innerHTML = "Empty"
+                    }
+                    if(object.plan_end != undefined || object.plan_end != null) {
+                        table.rows[indeX].cells[9].innerHTML = object.plan_end
+                    } else {
+                        table.rows[indeX].cells[9].innerHTML = "Empty"
+                    }
+                    table.rows[indeX].cells[11].innerHTML = object.fact_yield
+                    table.rows[indeX].cells[12].innerHTML = object.deals_counts
+                    if (object.activated_at != undefined || object.activated_at != null) {
+                        table.rows[indeX].cells[13].innerHTML = object.activated_at
+                    } else {
+                        table.rows[indeX].cells[13].innerHTML = "Empty"
+                    }
+                    if(object.deactivated_at != undefined || object.deactivated_at != null) {
+                        table.rows[indeX].cells[14].innerHTML = object.deactivated_at
+                    } else {
+                        table.rows[indeX].cells[14].innerHTML = "Empty"
+                    }
+                    table.rows[indeX].cells[15].innerHTML = object.created_at
+                    if(object.deleted_at != undefined || object.deleted_at != null) {
+                        table.rows[indeX].cells[16].innerHTML = object.deleted_at
+                    } else {
+                        table.rows[indeX].cells[16].innerHTML = "Empty"
+                    }
+                } else {
+                    var NewRow = table.insertRow(indeX)
+
+                    NewRow.insertCell(0).innerHTML = object.robot_id
+                    NewRow.insertCell(1).innerHTML = object.owner_user_id
+                    NewRow.insertCell(2).innerHTML = object.parent_robot_id
+                    NewRow.insertCell(3).innerHTML = object.is_favorite
+                    NewRow.insertCell(4).innerHTML = object.is_active
+                    if (object.ticker != undefined || object.ticker != null) {
+                        NewRow.insertCell(5).innerHTML = object.ticker
+                    } else {
+                        NewRow.insertCell(5).innerHTML = "Empty"
+                    }
+                    NewRow.insertCell(6).innerHTML = object.buy_price
+                    NewRow.insertCell(7).innerHTML = object.sell_price
+                    if (object.plan_start != undefined || object.plan_start != null) {
+                        NewRow.insertCell(8).innerHTML = object.plan_start
+                    } else {
+                        NewRow.insertCell(8).innerHTML = "Empty"
+                    }
+                    if(object.plan_end != undefined || object.plan_end != null) {
+                        NewRow.insertCell(9).innerHTML = object.plan_end
+                    } else {
+                        NewRow.insertCell(9).innerHTML = "Empty"
+                    }
+                    NewRow.insertCell(10).innerHTML = object.plan_yield
+                    NewRow.insertCell(11).innerHTML = object.fact_yield
+                    NewRow.insertCell(12).innerHTML = object.deals_counts
+                    if (object.activated_at != undefined || object.activated_at != null) {
+                        NewRow.insertCell(13).innerHTML = object.activated_at
+                    } else {
+                        NewRow.insertCell(13).innerHTML = "Empty"
+                    }
+                    if(object.deactivated_at != undefined || object.deactivated_at != null) {
+                        NewRow.insertCell(14).innerHTML = object.deactivated_at
+                    } else {
+                        NewRow.insertCell(14).innerHTML = "Empty"
+                    }
+                    NewRow.insertCell(15).innerHTML = object.created_at
+                    if(object.deleted_at != undefined || object.deleted_at != null) {
+                        NewRow.insertCell(16).innerHTML = object.deleted_at
+                    } else {
+                        NewRow.insertCell(16).innerHTML = "Empty"
+                    }
+                    var button1 = document.createElement('BUTTON')
+                    button1.setAttribute("onclick", "activate("+object.robot_id+")")
+                    button1.innerHTML = "Activate"
+                    NewRow.insertCell(17).appendChild(button1)
+                    var button2 = document.createElement('BUTTON')
+                    button2.innerHTML = "Deactivate"
+                    button2.setAttribute("onclick", "deactivate("+object.robot_id+")")
+                    NewRow.insertCell(18).appendChild(button2)
+                } 
+            };
+        
+        </script>
+</body>

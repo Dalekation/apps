@@ -1,0 +1,131 @@
+<head>
+    <title>Robot</title>
+</head>
+<body>
+        <table id = "robotsTable">
+            <tr>
+                <td>robot_id</td>
+                <td>{{.RobotID}}</td>
+            </tr>
+            <tr>
+                <td>owner_user_id</td>
+                <td>{{.OwnerUserID}}</td>
+            </tr>  
+            <tr>
+                <td>parent_robot_id</td>
+                <td>{{.ParentRobotID}}</td>
+            </tr> 
+            <tr>
+                <td>is_favorite</td>
+                <td>{{.IsFavourite}}</td>
+            </tr> 
+            <tr>
+                <td>is_active</td>
+                <td>{{.IsActive}}</td>
+            </tr>
+            <tr>
+                <td>ticker</td>
+                {{if .Ticker}}<td>{{.Ticker}}</td>{{else}}<td>Empty</td>{{end}}
+            </tr>
+            <tr>
+                <td>buy_price</td>
+                <td>{{.BuyPrice}}</td>
+            </tr>
+            <tr>
+                <td>sell_price</td>
+                <td>{{.SellPrice}}</td>
+            </tr>
+            <tr>
+                <td>plan_start</td>
+                {{if .PlanStart}}<td>{{.PlanStart}}</td>{{else}}<td>Empty</td>{{end}}
+            </tr>
+            <tr>
+                <td>plan_end</td>
+                {{if .PlanEnd}}<td>{{.PlanEnd}}</td>{{else}}<td>Empty</td>{{end}}
+            </tr>
+            <tr>
+                <td>plan_yield</td>
+                <td>{{.PlanYield}}</td>
+            </tr>
+            <tr>
+                <td>fact_yield</td>
+                <td>{{.FactYield}}</td>
+            </tr>
+            <tr>
+                <td>deals_counts</td>
+                <td>{{.DealsCount}}</td>
+            </tr>
+            <tr>
+                <td>activated_at</td>
+                {{if .ActivatedAt}}<td>{{.ActivatedAt}}</td>{{else}}<td>Empty</td>{{end}}
+            </tr>
+            <tr>
+                <td>deactivated_at</td>
+                {{if .DeactivatedAt}}<td>{{.DeactivatedAt}}</td>{{else}}<td>Empty</td>{{end}}
+            </tr>
+            <tr>
+                <td>created_at</td>
+                <td>{{.CreatedAt}} </td>
+            </tr>
+            <tr>
+                <td>deleted_at</th>
+                {{if .DeletedAt}}<td>{{.DeletedAt}}</td>{{else}}<td>Empty</td>{{end}}
+            </tr>
+        </table> 
+        
+        <h1 id = "error"></h1>
+        <script> 
+            var socket = new WebSocket('ws://localhost:5000/wsrobots');
+        
+            socket.onopen = function(event) {
+                console.log('WebSocket is connected.');
+            };
+
+            requiredID = {{.RobotID}}
+
+            socket.onmessage = function(event) {
+                var message = event.data;
+                object = JSON.parse(message)
+
+                if (object.robot_id == requiredID) {
+                    updateRobot(object)
+                };
+            };
+
+            socket.onclose = function(event) {
+                console.log('Disconnected from WebSocket.');
+            };
+
+            function updateRobot(object) {
+                var table = document.getElementById("robotsTable");
+ 
+                table.rows[1].cells[1].innerHTML = object.owner_user_id
+                table.rows[2].cells[1].innerHTML = object.parent_robot_id
+                table.rows[3].cells[1].innerHTML = object.is_favorite
+                table.rows[4].cells[1].innerHTML = object.is_active
+                table.rows[5].cells[1].innerHTML = object.ticker
+                table.rows[6].cells[1].innerHTML = object.buy_price
+                table.rows[7].cells[1].innerHTML = object.sell_price
+                if (object.plan_start != undefined || object.plan_start != null) {
+                    table.rows[8].cells[1].innerHTML = object.plan_start
+                };
+                if(object.plan_end != undefined || object.plan_end != null) {
+                    table.rows[9].cells[1].innerHTML = object.plan_end
+                };
+                table.rows[10].cells[1].innerHTML = object.plan_yield
+                table.rows[11].cells[1].innerHTML = object.fact_yield
+                table.rows[12].cells[1].innerHTML = object.deals_counts
+                if (object.activated_at != undefined || object.activated_at != null) {
+                    table.rows[13].cells[1].innerHTML = object.activated_at
+                };
+                if (object.deactivated_at != undefined || object.deactivated_at != null) {
+                    table.rows[14].cells[1].innerHTML = object.deactivated_at
+                };
+                table.rows[15].cells[1].innerHTML = object.created_at
+                if ( object.deleted_at != undefined ||  object.deleted_at != null) {
+                    table.rows[16].cells[1].innerHTML = object.deleted_at
+                }   
+            };
+        
+        </script>
+</body>
